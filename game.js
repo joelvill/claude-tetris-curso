@@ -326,6 +326,9 @@ function endGame() {
   cancelAnimationFrame(animId);
   overlayTitle.textContent = 'GAME OVER';
   overlayScore.textContent = `Puntuación: ${score.toLocaleString()}`;
+  // El hook va antes de revelar la pantalla para que el top 5 y el formulario
+  // de nombre estén ya pintados y no se vea un flash con datos viejos.
+  if (window.Records) window.Records.onGameOver({ score, lines, level, maxCombo: typeof maxCombo === 'number' ? maxCombo : 0 });
   showScreen('gameover');
 }
 
