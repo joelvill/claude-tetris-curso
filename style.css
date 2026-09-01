@@ -290,3 +290,88 @@ kbd {
 
 /* #restart-btn ya se estiliza como .menu-btn (ver arriba); una regla por id
    ganaria en especificidad e impediria la variante .secondary. */
+
+/* ================= Temas visuales (skins) =================
+   El cromo de la página se resuelve con variables CSS y el atributo
+   data-skin del elemento raíz (lo pone skins.js). Los valores de Retro
+   son los originales, así que la skin por defecto se ve igual que antes. */
+
+:root,
+:root[data-skin="retro"] {
+  --skin-bg: #0f0f17;
+  --skin-canvas: #1a1a25;
+  --skin-border: #2a2a3a;
+  --skin-accent: #7aa2f7;
+  --skin-glow: rgba(122, 162, 247, 0.5);
+}
+
+:root[data-skin="neon"] {
+  --skin-bg: #05050a;
+  --skin-canvas: #0a0a14;
+  --skin-border: #123a44;
+  --skin-accent: #00f0ff;
+  --skin-glow: rgba(0, 240, 255, 0.65);
+}
+
+:root[data-skin="pastel"] {
+  --skin-bg: #232033;
+  --skin-canvas: #2c2842;
+  --skin-border: #423c5c;
+  --skin-accent: #dcb8ec;
+  --skin-glow: rgba(220, 184, 236, 0.45);
+}
+
+:root[data-skin="pixel"] {
+  --skin-bg: #101820;
+  --skin-canvas: #181828;
+  --skin-border: #3a3a52;
+  --skin-accent: #f8d878;
+  --skin-glow: rgba(248, 216, 120, 0.4);
+}
+
+body {
+  background: var(--skin-bg, #0f0f17);
+}
+
+#board,
+#next-canvas {
+  background: var(--skin-canvas, #1a1a25);
+  border-color: var(--skin-border, #2a2a3a);
+}
+
+.game-title {
+  color: var(--skin-accent, #7aa2f7);
+  text-shadow: 0 0 20px var(--skin-glow, rgba(122, 162, 247, 0.5));
+}
+
+.value,
+#overlay-score,
+.screen-title {
+  color: var(--skin-accent, #7aa2f7);
+}
+
+/* Mismos colores que la regla original de #restart-btn, pero tematizados. */
+/* ---- Selector de skins ---- */
+.skin-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.skin-btn.active {
+  outline: 2px solid var(--skin-accent, #7aa2f7);
+  outline-offset: 2px;
+}
+
+.skin-swatches {
+  display: flex;
+  gap: 3px;
+}
+
+.skin-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  border: 1px solid rgba(0, 0, 0, 0.3);
+}
