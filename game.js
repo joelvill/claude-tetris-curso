@@ -158,6 +158,11 @@ function updateHUD() {
 
 function drawBlock(context, x, y, colorIndex, size, alpha) {
   if (!colorIndex) return;
+  // Despacho a la skin activa; sin skins.js se mantiene el dibujado Retro.
+  if (window.Skins) {
+    window.Skins.drawBlock(context, x, y, colorIndex, size, alpha);
+    return;
+  }
   const color = COLORS[colorIndex];
   context.globalAlpha = alpha ?? 1;
   context.fillStyle = color;
@@ -169,6 +174,8 @@ function drawBlock(context, x, y, colorIndex, size, alpha) {
 }
 
 function drawGrid() {
+  // Despacho a la skin activa; sin skins.js se mantiene la rejilla Retro.
+  if (window.Skins && window.Skins.drawGrid(ctx, COLS, ROWS, BLOCK)) return;
   ctx.strokeStyle = '#22222e';
   ctx.lineWidth = 0.5;
   for (let c = 1; c < COLS; c++) {
