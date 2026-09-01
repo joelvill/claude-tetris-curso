@@ -223,6 +223,7 @@ function endGame() {
   cancelAnimationFrame(animId);
   overlayTitle.textContent = 'GAME OVER';
   overlayScore.textContent = `Puntuación: ${score.toLocaleString()}`;
+  if (window.Records) window.Records.onGameOver({ score, lines, level, maxCombo: typeof maxCombo === 'number' ? maxCombo : 0 });
   overlay.classList.remove('hidden');
 }
 
