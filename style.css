@@ -350,7 +350,19 @@ body {
   color: var(--skin-accent, #7aa2f7);
 }
 
-/* Mismos colores que la regla original de #restart-btn, pero tematizados. */
+/* Mismos colores que la regla original de #restart-btn, pero tematizados.
+   La unidad 1 disolvió #restart-btn en .menu-btn, así que el tema se aplica a
+   todos los botones de menú; .menu-btn.secondary gana por especificidad. */
+.menu-btn {
+  background: var(--skin-accent, #7aa2f7);
+  color: var(--skin-bg, #0f0f17);
+}
+
+.menu-btn:hover {
+  background: var(--skin-accent, #7aa2f7);
+  filter: brightness(1.15);
+}
+
 /* ---- Selector de skins ---- */
 .skin-btn {
   display: flex;
