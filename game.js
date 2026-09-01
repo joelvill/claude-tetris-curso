@@ -28,6 +28,16 @@ const PIECES = [
 
 const LINE_SCORES = [0, 100, 300, 500, 800];
 
+// Lista de controles de la pantalla "Controles" del menú de pausa.
+// `alt: true` = teclas alternativas (se separan con "/"); si no, van juntas.
+const CONTROLS = [
+  { keys: ['←', '→'], action: 'mover' },
+  { keys: ['↑', 'X'], alt: true, action: 'rotar' },
+  { keys: ['↓'], action: 'bajar' },
+  { keys: ['Space'], action: 'caída rápida' },
+  { keys: ['P', 'Esc'], alt: true, action: 'pausa' },
+];
+
 const canvas = document.getElementById('board');
 const ctx = canvas.getContext('2d');
 const nextCanvas = document.getElementById('next-canvas');
@@ -39,6 +49,11 @@ const overlay = document.getElementById('overlay');
 const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
+const btnResume = document.getElementById('btn-resume');
+const btnRestart = document.getElementById('btn-restart');
+const btnControls = document.getElementById('btn-controls');
+const btnBackControls = document.getElementById('btn-back-controls');
+const controlsList = document.getElementById('controls-list');
 
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
 
@@ -240,6 +255,32 @@ function togglePause() {
   }
 }
 
+// Pinta #controls-list a partir de CONTROLS, con el mismo markup <kbd> que el
+// panel lateral. El contenedor lo aporta index.html: si es una lista usamos
+// <li>, si no <div>.
+function renderControls() {
+  const tag = controlsList.tagName === 'UL' || controlsList.tagName === 'OL' ? 'li' : 'div';
+  controlsList.textContent = '';
+  for (const ctrl of CONTROLS) {
+    const item = document.createElement(tag);
+    ctrl.keys.forEach((key, i) => {
+      if (i > 0 && ctrl.alt) item.append(' / ');
+      const kbd = document.createElement('kbd');
+      kbd.textContent = key;
+      item.append(kbd);
+    });
+    item.append(' ' + ctrl.action);
+    controlsList.append(item);
+  }
+}
+
+// Tras pulsar un botón del menú el foco se queda en él, así que un Space o un
+// Enter posterior volvería a "clicarlo" ya dentro del juego. Se limpia al volver.
+function blurMenuFocus() {
+  const el = document.activeElement;
+  if (el && typeof el.blur === 'function') el.blur();
+}
+
 function loop(ts) {
   const dt = ts - lastTime;
   lastTime = ts;
@@ -299,6 +340,18 @@ document.addEventListener('keydown', e => {
   updateHUD();
 });
 
-restartBtn.addEventListener('click', init);
+// Menú de pausa: reanudar reutiliza togglePause() para no duplicar el manejo
+// de animId/lastTime; reiniciar arranca partida nueva sin recargar la página.
+btnResume.addEventListener('click', () => { blurMenuFocus(); togglePause(); });
+btnRestart.addEventListener('click', () => { blurMenuFocus(); init(); });
+// También al navegar entre pantallas: si el foco se queda en el botón, un
+// Enter o un Space posterior lo re-activaría (incluso ya de vuelta en el juego,
+// si se reanuda con P/Esc en vez de con el botón).
+btnControls.addEventListener('click', () => { blurMenuFocus(); showScreen('controls'); });
+btnBackControls.addEventListener('click', () => { blurMenuFocus(); showScreen('pause'); });
+
+restartBtn.addEventListener('click', () => { blurMenuFocus(); init(); });
+
+renderControls();
 
 init();
