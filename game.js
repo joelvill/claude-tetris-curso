@@ -40,7 +40,42 @@ const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
 
-let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
+// Pantallas del overlay: la clave es el nombre que acepta showScreen()
+const SCREENS = {
+  start: document.getElementById('screen-start'),
+  pause: document.getElementById('screen-pause'),
+  controls: document.getElementById('screen-controls'),
+  startlevel: document.getElementById('screen-startlevel'),
+  gameover: document.getElementById('screen-gameover'),
+  records: document.getElementById('screen-records'),
+  skins: document.getElementById('screen-skins'),
+};
+
+let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId, screen, menuOpen;
+
+// Muestra una sola pantalla del overlay (o ninguna con null) y actualiza
+// screen/menuOpen, que son la fuente de verdad para el bloqueo de inputs.
+function showScreen(name) {
+  for (const key in SCREENS) {
+    if (SCREENS[key]) SCREENS[key].classList.add('hidden');
+  }
+  const target = name == null ? null : SCREENS[name];
+  if (name != null && !target) {
+    // Nombre desconocido o id ausente en el HTML: se cierra el overlay en vez de
+    // reventar, para no dejar el juego bloqueado.
+    console.warn(`showScreen: pantalla desconocida "${name}"`);
+  }
+  if (!target) {
+    overlay.classList.add('hidden');
+    screen = null;
+    menuOpen = false;
+    return;
+  }
+  overlay.classList.remove('hidden');
+  target.classList.remove('hidden');
+  screen = name;
+  menuOpen = true;
+}
 
 function createBoard() {
   return Array.from({ length: ROWS }, () => new Array(COLS).fill(0));
@@ -223,20 +258,19 @@ function endGame() {
   cancelAnimationFrame(animId);
   overlayTitle.textContent = 'GAME OVER';
   overlayScore.textContent = `Puntuación: ${score.toLocaleString()}`;
-  overlay.classList.remove('hidden');
+  showScreen('gameover');
 }
 
 function togglePause() {
   if (gameOver) return;
   paused = !paused;
   if (!paused) {
+    showScreen(null);
     lastTime = performance.now();
     loop(lastTime);
   } else {
     cancelAnimationFrame(animId);
-    overlayTitle.textContent = 'PAUSA';
-    overlayScore.textContent = '';
-    overlay.classList.remove('hidden');
+    showScreen('pause');
   }
 }
 
@@ -253,6 +287,10 @@ function loop(ts) {
     }
   }
   draw();
+  // Tras un game over (lo detecta spawn() dentro de lockPiece) no se reprograma:
+  // el cancelAnimationFrame de endGame cancela un frame ya disparado, así que es
+  // aquí donde se corta la cadena y animId queda sin frame pendiente.
+  if (gameOver || paused) return;
   animId = requestAnimationFrame(loop);
 }
 
@@ -263,19 +301,24 @@ function init() {
   level = 1;
   paused = false;
   gameOver = false;
+  screen = null;
+  menuOpen = false;
   dropInterval = 1000;
   dropAccum = 0;
   lastTime = performance.now();
   next = randomPiece();
   spawn();
   updateHUD();
-  overlay.classList.add('hidden');
+  showScreen(null);
   cancelAnimationFrame(animId);
   animId = requestAnimationFrame(loop);
 }
 
 document.addEventListener('keydown', e => {
-  if (e.code === 'KeyP') { togglePause(); return; }
+  // Con un menu abierto los inputs del juego quedan bloqueados: solo
+  // Escape/P siguen respondiendo (para reanudar desde la pausa).
+  if (menuOpen) { if (e.code === 'Escape' || e.code === 'KeyP') togglePause(); return; }
+  if (e.code === 'Escape' || e.code === 'KeyP') { togglePause(); return; }
   if (paused || gameOver) return;
   switch (e.code) {
     case 'ArrowLeft':

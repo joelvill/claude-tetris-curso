@@ -39,7 +39,7 @@
             <li><kbd>↑</kbd> rotar</li>
             <li><kbd>↓</kbd> bajar</li>
             <li><kbd>Space</kbd> caída</li>
-            <li><kbd>P</kbd> pausa</li>
+            <li><kbd>P</kbd><kbd>Esc</kbd> pausa</li>
           </ul>
         </div>
       </aside>
@@ -47,13 +47,92 @@
 
     <div id="overlay" class="overlay hidden">
       <div class="overlay-box">
-        <p id="overlay-title">GAME OVER</p>
-        <p id="overlay-score"></p>
-        <button id="restart-btn">Reiniciar</button>
+        <!-- Pantalla de inicio -->
+        <section id="screen-start" class="screen hidden">
+          <p class="screen-title">TETRIS</p>
+          <div class="menu-list">
+            <button id="btn-play" class="menu-btn">Jugar</button>
+            <button id="btn-startlevel" class="menu-btn secondary">Nivel inicial</button>
+            <button id="btn-skins" class="menu-btn secondary">Temas</button>
+            <button id="btn-records" class="menu-btn secondary">Records</button>
+          </div>
+          <!-- Rellenado por records.js -->
+          <div id="start-records"></div>
+        </section>
+
+        <!-- Menu de pausa -->
+        <section id="screen-pause" class="screen hidden">
+          <p class="screen-title">PAUSA</p>
+          <div class="menu-list">
+            <button id="btn-resume" class="menu-btn">Reanudar</button>
+            <button id="btn-restart" class="menu-btn secondary">Reiniciar</button>
+            <button id="btn-controls" class="menu-btn secondary">Ver controles</button>
+            <button id="btn-startlevel-pause" class="menu-btn secondary">Nivel inicial</button>
+            <button id="btn-skins-pause" class="menu-btn secondary">Temas</button>
+          </div>
+        </section>
+
+        <!-- Lista de controles -->
+        <section id="screen-controls" class="screen hidden">
+          <p class="screen-title">CONTROLES</p>
+          <!-- Rellenado por la unidad de controles -->
+          <div id="controls-list"></div>
+          <div class="menu-list">
+            <button id="btn-back-controls" class="menu-btn secondary">Volver</button>
+          </div>
+        </section>
+
+        <!-- Seleccion de nivel inicial -->
+        <section id="screen-startlevel" class="screen hidden">
+          <p class="screen-title">NIVEL INICIAL</p>
+          <label class="menu-label" for="input-start-level">Nivel (1-20)</label>
+          <input id="input-start-level" type="number" min="1" max="20" />
+          <div class="menu-list">
+            <button id="btn-back-startlevel" class="menu-btn secondary">Volver</button>
+          </div>
+        </section>
+
+        <!-- Fin de partida -->
+        <section id="screen-gameover" class="screen hidden">
+          <p id="overlay-title">GAME OVER</p>
+          <p id="overlay-score"></p>
+          <!-- Rellenado por records.js -->
+          <div id="gameover-records"></div>
+          <label class="menu-label" for="input-player-name">Tu nombre</label>
+          <input id="input-player-name" type="text" maxlength="12" />
+          <div class="menu-list">
+            <button id="btn-save-score" class="menu-btn">Guardar</button>
+            <button id="restart-btn" class="menu-btn secondary">Reiniciar</button>
+          </div>
+        </section>
+
+        <!-- Tabla de records -->
+        <section id="screen-records" class="screen hidden">
+          <p class="screen-title">RECORDS</p>
+          <!-- Rellenados por records.js -->
+          <div id="records-list"></div>
+          <div id="records-stats"></div>
+          <div class="menu-list">
+            <button id="btn-reset-records" class="menu-btn secondary">Borrar records</button>
+            <button id="btn-back-records" class="menu-btn secondary">Volver</button>
+          </div>
+        </section>
+
+        <!-- Temas visuales -->
+        <section id="screen-skins" class="screen hidden">
+          <p class="screen-title">TEMAS</p>
+          <!-- Rellenado por skins.js -->
+          <div id="skins-list"></div>
+          <div class="menu-list">
+            <button id="btn-back-skins" class="menu-btn secondary">Volver</button>
+          </div>
+        </section>
       </div>
     </div>
   </div>
 
   <script src="game.js"></script>
+  <script src="records.js"></script>
+  <script src="skins.js"></script>
 </body>
 </html>
