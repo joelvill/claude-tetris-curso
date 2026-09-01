@@ -28,6 +28,9 @@ const PIECES = [
 
 const LINE_SCORES = [0, 100, 300, 500, 800];
 
+// Clave de localStorage para el nivel inicial elegido en la pantalla de inicio.
+const STORAGE_START_LEVEL = 'tetris.startLevel';
+
 const canvas = document.getElementById('board');
 const ctx = canvas.getContext('2d');
 const nextCanvas = document.getElementById('next-canvas');
@@ -39,8 +42,13 @@ const overlay = document.getElementById('overlay');
 const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
+const btnPlay = document.getElementById('btn-play');
+const btnStartLevel = document.getElementById('btn-startlevel');
+const btnStartLevelPause = document.getElementById('btn-startlevel-pause');
+const btnBackStartLevel = document.getElementById('btn-back-startlevel');
+const inputStartLevel = document.getElementById('input-start-level');
 
-let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
+let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId, startLevel, baseLevel, startLevelFrom;
 
 function createBoard() {
   return Array.from({ length: ROWS }, () => new Array(COLS).fill(0));
@@ -93,6 +101,35 @@ function merge() {
         board[current.y + r][current.x + c] = current.shape[r][c];
 }
 
+// Velocidad de caída (ms) para un nivel dado. Única fuente de verdad.
+function speedForLevel(l) {
+  return Math.max(100, 1000 - (l - 1) * 90);
+}
+
+// Deja el valor en un entero dentro de 1..20; cualquier basura cae a 1.
+function sanitizeStartLevel(value) {
+  const n = Number(value);
+  if (Number.isNaN(n)) return 1; // null, '' -> 0 -> clampa a 1; basura -> 1
+  return Math.min(20, Math.max(1, Math.floor(n)));
+}
+
+// localStorage puede lanzar en modo privado o con el storage bloqueado.
+function loadStartLevel() {
+  try {
+    return sanitizeStartLevel(localStorage.getItem(STORAGE_START_LEVEL));
+  } catch (e) {
+    return 1;
+  }
+}
+
+function saveStartLevel(value) {
+  try {
+    localStorage.setItem(STORAGE_START_LEVEL, String(value));
+  } catch (e) {
+    // sin persistencia: se conserva solo en memoria
+  }
+}
+
 function clearLines() {
   let cleared = 0;
   for (let r = ROWS - 1; r >= 0; r--) {
@@ -106,8 +143,8 @@ function clearLines() {
   if (cleared) {
     lines += cleared;
     score += (LINE_SCORES[cleared] || 0) * level;
-    level = Math.floor(lines / 10) + 1;
-    dropInterval = Math.max(100, 1000 - (level - 1) * 90);
+    level = baseLevel + Math.floor(lines / 10);
+    dropInterval = speedForLevel(level);
     updateHUD();
   }
 }
@@ -260,10 +297,13 @@ function init() {
   board = createBoard();
   score = 0;
   lines = 0;
-  level = 1;
+  // baseLevel congela el nivel inicial de ESTA partida: cambiarlo en el menú de
+  // pausa no debe alterar la progresión de la partida en curso, solo la siguiente.
+  baseLevel = startLevel;
+  level = baseLevel;
   paused = false;
   gameOver = false;
-  dropInterval = 1000;
+  dropInterval = speedForLevel(level);
   dropAccum = 0;
   lastTime = performance.now();
   next = randomPiece();
@@ -301,4 +341,58 @@ document.addEventListener('keydown', e => {
 
 restartBtn.addEventListener('click', init);
 
-init();
+// --- Pantalla de inicio y selector de nivel inicial ---
+
+btnPlay.addEventListener('click', init);
+
+// Se abre desde la pantalla de inicio y desde el menú de pausa; recuerda de dónde
+// se venía para que el botón Volver regrese a la pantalla correcta.
+function openStartLevel() {
+  startLevelFrom = screen;
+  showScreen('startlevel');
+}
+
+btnStartLevel.addEventListener('click', openStartLevel);
+btnStartLevelPause.addEventListener('click', openStartLevel);
+
+btnBackStartLevel.addEventListener('click', () => {
+  showScreen(startLevelFrom === 'pause' ? 'pause' : 'start');
+});
+
+inputStartLevel.addEventListener('change', () => {
+  startLevel = sanitizeStartLevel(inputStartLevel.value);
+  inputStartLevel.value = startLevel; // refleja el valor ya saneado
+  saveStartLevel(startLevel);
+  // Sin partida en curso el HUD ya muestra el nivel elegido; con una partida
+  // pausada detrás el cambio se aplica solo a la próxima (ver baseLevel).
+  if (gameOver) {
+    level = startLevel;
+    updateHUD();
+  }
+});
+
+// --- Arranque: pantalla de inicio, sin lanzar el loop ---
+
+startLevel = loadStartLevel();
+inputStartLevel.value = startLevel;
+
+// Fondo estático para que el canvas no quede en blanco detrás del overlay.
+// draw() desreferencia `current` para el ghost, de ahí que haya que asignarlo.
+board = createBoard();
+next = randomPiece();
+current = randomPiece();
+score = 0;
+lines = 0;
+level = startLevel;
+draw();
+drawNext();
+updateHUD();
+
+// No hay partida en curso: se marca como terminada y sin frame pendiente para
+// que ni las teclas de juego ni togglePause() reanimen un loop que nunca arrancó.
+// init() (botón Jugar / Reiniciar) es el único camino que pone el loop en marcha.
+gameOver = true;
+paused = false;
+animId = 0;
+
+showScreen('start');
